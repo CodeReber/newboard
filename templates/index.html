@@ -5,7 +5,7 @@
   <title>CodePen - Simple Drag and Drop Lean Kanban Board Tool</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.css'><link rel="stylesheet" href="../static/css/style.css">
-<script type="module" src="../static/js/script.js"></script>
+
 
 </head>
 <body>
@@ -13,18 +13,7 @@
 <header>
   <h1>Drag & Drop<br/><span>Lean Kanban Board</span></h1>
 </header>
-<script>
-  function addTask() {
-  /* Get task text from input */
-  var inputTask = document.getElementById("taskText").value;
-  console.log(inputTask)
-  /* Add task to the 'To Do' column */
-  document.getElementById("to-do").innerHTML +=
-    "<li class='task'><p>" + inputTask + "</p></li>";
-  /* Clear task text from input after adding task */
-  document.getElementById("taskText").value = "";
-}
-</script>
+
 <div class="add-task-container">
   <input type="text" maxlength="50" id="taskText" placeholder="New Task..." onkeydown="if (event.keyCode == 13)
                         document.getElementById('add').click()">
@@ -34,41 +23,19 @@
 <div class="main-container">
   <ul class="columns">
 
+    {% for person in people %}
     <li class="column to-do-column">
       <div class="column-header">
-        <h4>Jim</h4>
+        <h4>{{person.Name}}</h4>
       </div>
-      <ul class="task-list" id="to-do">
+      <ul class="task-list" id="{{person.Name}}">
 
       </ul>
     </li>
+    {% endfor %}
 
-    <li class="column doing-column">
-      <div class="column-header">
-        <h4>Ryan</h4>
-      </div>
-      <ul class="task-list" id="doing">
 
-      </ul>
-    </li>
 
-    <li class="column done-column">
-      <div class="column-header">
-        <h4>Jeff</h4>
-      </div>
-      <ul class="task-list" id="done">
-
-      </ul>
-    </li>
-
-    <li class="column done-column">
-      <div class="column-header">
-        <h4>Jorge</h4>
-      </div>
-      <ul class="task-list" id="test">
-
-      </ul>
-    </li>
 
     <li class="column trash-column">
       <div class="column-header">
@@ -78,12 +45,7 @@
 
 
       </ul>
-      <script>
-        function emptyTrash() {
-  /* Clear tasks from 'Trash' column */
-          document.getElementById("trash").innerHTML = "";
-          }
-      </script>
+
       <div class="column-button">
         <button class="button delete-button" onclick="emptyTrash()">Delete</button>
       </div>
@@ -96,8 +58,75 @@
  
 </footer>
 <!-- partial -->
+
+  <script>
+    const firstcolumn = "{{people[0].Name}}"
+    const columns = []
+    {% for person in people %}
+      columns.push(document.getElementById("{{person.Name}}"));
+    {% endfor %}
+  </script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
-  <script type="module" src="../static/js/script.js"></script>
+  <script>
+    dragula(columns).on('drop', function (el, target) {
+      console.log(el.getAttribute("taskid"))
+      console.log(target.id)
+  });
+    loadTask()
+    async function postData(url = '', data = {}) {
+  // Default options are marked with *
+  const response = await fetch(url, {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+   // mode: 'cors', // no-cors, *cors, same-origin
+    //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    //credentials: 'same-origin', // include, *same-origin, omit
+    headers: {
+      'Content-Type': 'application/json'
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    //redirect: 'follow', // manual, *follow, error
+    //referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+    body: JSON.stringify(data) // body data type must match "Content-Type" header
+  });
+  return response.json(); // parses JSON response into native JavaScript objects
+}
+
+
+
+/* Vanilla JS to add a new task */
+function addTask() {
+  /* Get task text from input */
+  var inputTask = document.getElementById("taskText").value;
+  console.log(inputTask)
+  /* Add task to the 'To Do' column */
+  
+  postData('/task', { name: inputTask })
+  .then(data => {
+  document.getElementById(firstcolumn).innerHTML +=
+    "<li class='task' taskid='" + data.id + "'><p>" + inputTask + "</p></li>";
+  /* Clear task text from input after adding task */
+  document.getElementById("taskText").value = "";
+    console.log(data); // JSON data parsed by `data.json()` call
+  });
+}
+function loadTask(){
+  fetch("/task")
+  .then(response => response.json())
+  .then(data => {
+    for (task of data.tasks){
+      document.getElementById(task.personname).innerHTML +=
+    "<li class='task' taskid='" + task.id + "'><p>" + task.name + "</p></li>";
+    }
+  });
+}
+
+/* Vanilla JS to delete tasks in 'Trash' column */
+function emptyTrash() {
+  /* Clear tasks from 'Trash' column */
+  document.getElementById("trash").innerHTML = "";
+}
+
+  </script>
 
 </body>
 </html>

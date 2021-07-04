@@ -1,11 +1,7 @@
 /* Custom Dragula JS */
-dragula([
-  document.getElementById("to-do"),
-  document.getElementById("doing"),
-  document.getElementById("done"),
-  document.getElementById("trash"),
-  document.getElementById("test")
-]);
+
+
+dragula(columns);
 removeOnSpill: false
   .on("drag", function(el) {
     el.className.replace("ex-moved", "");
@@ -26,7 +22,7 @@ function addTask() {
   var inputTask = document.getElementById("taskText").value;
   console.log(inputTask)
   /* Add task to the 'To Do' column */
-  document.getElementById("to-do").innerHTML +=
+  document.getElementById(firstcolumn).innerHTML +=
     "<li class='task'><p>" + inputTask + "</p></li>";
   /* Clear task text from input after adding task */
   document.getElementById("taskText").value = "";
