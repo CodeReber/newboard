@@ -19,6 +19,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     Name = db.Column(db.TEXT(255))
     Personid = db.Column(db.ForeignKey("person.id"))
+    active = db.Column(db.Boolean,default=True) 
     
 
 
@@ -42,11 +43,32 @@ def addtask():
 
 @app.route('/task')
 def gettask():
-    tasks = Task.query.all()
+    tasks = Task.query.filter_by(active=True).all()
     tasklist = []
     for t in tasks:
         tasklist.append({"id":t.id,"name":t.Name,"personid":t.Personid,"personname":t.person.Name})
     return {"tasks":tasklist}
+
+@app.route('/updatetask',methods=["POST"])
+def updatetask():
+    req = request.get_json()
+    taskid = req.get("taskid")
+    column = req.get("column")
+    personid = Person.query.filter_by(Name=column).first().id
+    task = Task.query.filter_by(id=taskid).first()
+    task.Personid = personid
+    db.session.commit()
+    return {"id":task.id,"name":task.Name,"personid":personid}
+
+@app.route('/deletetask',methods=["POST"])
+def deletetask():
+    req = request.get_json()
+    todelete = req.get("todelete")
+    for taskid in todelete:
+        task = Task.query.filter_by(id=taskid).first()
+        task.active = False
+        db.session.commit()
+    return {}
 
 
 if __name__ == "__main__":

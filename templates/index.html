@@ -68,9 +68,12 @@
   </script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.js'></script>
   <script>
+    columns.push(document.getElementById("trash"));
     dragula(columns).on('drop', function (el, target) {
-      console.log(el.getAttribute("taskid"))
-      console.log(target.id)
+      if (target.id != "trash"){
+      updateTask(el.getAttribute("taskid"), target.id)
+      }
+
   });
     loadTask()
     async function postData(url = '', data = {}) {
@@ -109,6 +112,10 @@ function addTask() {
     console.log(data); // JSON data parsed by `data.json()` call
   });
 }
+function updateTask(taskid,column){
+  postData('/updatetask', { taskid:taskid, column:column }) 
+
+}
 function loadTask(){
   fetch("/task")
   .then(response => response.json())
@@ -123,7 +130,14 @@ function loadTask(){
 /* Vanilla JS to delete tasks in 'Trash' column */
 function emptyTrash() {
   /* Clear tasks from 'Trash' column */
-  document.getElementById("trash").innerHTML = "";
+   var tasks = document.querySelectorAll("#trash li")
+   todelete = []
+   for (task of tasks){
+     console.log(task)
+     todelete.push(task.getAttribute("taskid"))
+   }
+   postData('/deletetask', { todelete:todelete} ) 
+   document.getElementById("trash").innerHTML = "";
 }
 
   </script>
